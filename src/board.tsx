@@ -21,7 +21,7 @@ export type Square = Meeple | Empty;
 
 export type Board = Array<Square>;
 
-const shuffle = <T,> (array: T[]): T[] => {
+const shuffle = (array: Board): Board => {
   let currentIndex = array.length, randomIndex;
 
   // While there remain elements to shuffle.
@@ -56,10 +56,20 @@ type Game = {
   Counts: MeepleCount
 }
 
-export const newGame = () : Game => {
+const randomMeepleColour = (): MeepleColour => {
+  return Math.floor(Math.random() * Object.keys(MeepleColour).length);
+}
+
+export const newGame = (): Game => {
+  const player = randomMeepleColour()
+  let computer = randomMeepleColour()
+  while (player === computer) {
+    computer = randomMeepleColour()
+  }
+
   return {
-    Player: MeepleColour.Blue,
-    Computer: MeepleColour.Blue,
+    Player: player,
+    Computer: computer,
     Board: generateBoard(),
     Counts: initialCounts()
   }
@@ -104,24 +114,35 @@ const generateBoard = (): Board => {
 
 const unknownPiece = (a: never): never => { throw new Error(""); }
 
-export const play = (squareNumber: SquareNumber,
-  currentBoard: Board,
-  meepleCount: MeepleCount): Info => {
-  const pieceToMove = currentBoard[squareNumber]
+export const play = (squareNumber: SquareNumber, game: Game): Info => {
+  // Note;  game gets mutated
+  const pieceToMove = game.Board[squareNumber]
   switch (pieceToMove.type) {
     case "empty":
       throw new Error("Move not allowed - the square is empty.");
 
     case "meeple":
-      currentBoard[squareNumber] = { type: "empty" }
+      game.Board[squareNumber] = { type: "empty" }
       const newSquareNumber = (squareNumber + pieceToMove.value) % 18
-      const captured = currentBoard[newSquareNumber]
-      currentBoard[newSquareNumber] = pieceToMove
+      const captured = game.Board[newSquareNumber]
+      game.Board[newSquareNumber] = pieceToMove
 
       if (captured.type === "meeple") {
-        meepleCount[captured.colour]--;
-        if (meepleCount[captured.colour] === 0) {
-          return { message: `You moved ${pieceToMove.value} spaces and pushed in the final ${captured.colour} Meeple.` }
+        game.Counts[captured.colour]--;
+        if (game.Counts[captured.colour] === 0) {
+          if (captured.colour === game.Player) {
+            return {
+              message: `You moved ${pieceToMove.value} spaces and pushed in your final ${captured.colour} Meeple.`
+            }
+          } else if (captured.colour === game.Computer) {
+            return {
+              message: `You moved ${pieceToMove.value} spaces and pushed in the computers final ${captured.colour} Meeple.`
+            }
+          } else {
+            return {
+              message: `You moved ${pieceToMove.value} spaces and pushed in the final ${captured.colour} Meeple.`
+            }
+          }
         } else {
           return { message: `You moved ${pieceToMove.value} spaces and pushed in a ${captured.colour} Meeple` }
         }
