@@ -21,7 +21,7 @@ export type Square = Meeple | Empty;
 
 export type Board = Array<Square>;
 
-export function shuffle<T>(array: T[]): T[] {
+const shuffle = <T,> (array: T[]): T[] => {
   let currentIndex = array.length, randomIndex;
 
   // While there remain elements to shuffle.
@@ -45,7 +45,27 @@ type EnumDictionary<T extends number, U> = {
 
 type MeepleCount = EnumDictionary<MeepleColour, 0 | 1 | 2 | 3>
 
-export const initialCounts = (): MeepleCount => {
+type Info = {
+  message: string
+}
+
+type Game = {
+  Player: MeepleColour
+  Computer: MeepleColour
+  Board: Board
+  Counts: MeepleCount
+}
+
+export const newGame = () : Game => {
+  return {
+    Player: MeepleColour.Blue,
+    Computer: MeepleColour.Blue,
+    Board: generateBoard(),
+    Counts: initialCounts()
+  }
+}
+
+const initialCounts = (): MeepleCount => {
   const counts: MeepleCount = {
     [MeepleColour.White]: 3,
     [MeepleColour.Blue]: 3,
@@ -57,7 +77,7 @@ export const initialCounts = (): MeepleCount => {
   return counts;
 }
 
-export const generateBoard = (): Board => {
+const generateBoard = (): Board => {
   const unshuffled: Board = [
     { colour: MeepleColour.White, value: 1, type: "meeple" },
     { colour: MeepleColour.White, value: 2, type: "meeple" },
@@ -82,11 +102,11 @@ export const generateBoard = (): Board => {
   return shuffle(unshuffled)
 }
 
-const unknownPiece = (a: never) => { }
+const unknownPiece = (a: never): never => { throw new Error(""); }
 
 export const play = (squareNumber: SquareNumber,
   currentBoard: Board,
-  meepleCount: MeepleCount): Board => {
+  meepleCount: MeepleCount): Info => {
   const pieceToMove = currentBoard[squareNumber]
   switch (pieceToMove.type) {
     case "empty":
@@ -94,13 +114,23 @@ export const play = (squareNumber: SquareNumber,
 
     case "meeple":
       currentBoard[squareNumber] = { type: "empty" }
-      currentBoard[(squareNumber + pieceToMove.value) % 18] = pieceToMove
-      meepleCount[pieceToMove.colour]--;
-      break;
+      const newSquareNumber = (squareNumber + pieceToMove.value) % 18
+      const captured = currentBoard[newSquareNumber]
+      currentBoard[newSquareNumber] = pieceToMove
+
+      if (captured.type === "meeple") {
+        meepleCount[captured.colour]--;
+        if (meepleCount[captured.colour] === 0) {
+          return { message: `You moved ${pieceToMove.value} spaces and pushed in the final ${captured.colour} Meeple.` }
+        } else {
+          return { message: `You moved ${pieceToMove.value} spaces and pushed in a ${captured.colour} Meeple` }
+        }
+      } else {
+        return { message: `You moved ${pieceToMove.value} spaces into an empty square` }
+      }
 
     default:
       unknownPiece(pieceToMove)
   }
-
-  return currentBoard
+  return { message: "" }
 }
