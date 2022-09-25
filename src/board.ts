@@ -45,15 +45,14 @@ type EnumDictionary<T extends number, U> = {
 
 type MeepleCount = EnumDictionary<MeepleColour, 0 | 1 | 2 | 3>
 
-type Info = {
-  message: string
-}
+
 
 type Game = {
   Player: MeepleColour
   Computer: MeepleColour
   Board: Board
   Counts: MeepleCount
+  LastPieceMoved?: Meeple
 }
 
 const randomMeepleColour = (): MeepleColour => {
@@ -112,9 +111,36 @@ const generateBoard = (): Board => {
   return shuffle(unshuffled)
 }
 
+type LastMove = {
+  movedPiece: Meeple
+  capturedColour?: MeepleColour
+}
+
 const unknownPiece = (a: never): never => { throw new Error(""); }
 
-export const play = (squareNumber: SquareNumber, game: Game): Info => {
+export const descriptionOfLastMove = (game: Game, lastMove: LastMove): string => {
+
+  if (lastMove.capturedColour === undefined) {
+    return `You moved ${lastMove.movedPiece.value} spaces into an empty square`
+  }
+
+  if (game.Counts[lastMove.capturedColour] === 0) {
+
+    if (lastMove.capturedColour === game.Player) {
+      return `You moved ${lastMove.movedPiece.value} spaces and pushed in your final ${game.Player} Meeple.`
+    }
+
+    if (lastMove.capturedColour === game.Computer) {
+      return `You moved ${lastMove.movedPiece.value} spaces and pushed in the computers final ${game.Computer} Meeple.`
+    }
+
+    return `You moved ${lastMove.movedPiece.value} spaces and pushed in the final ${lastMove.capturedColour} Meeple.`
+  } else {
+    return `You moved ${lastMove.movedPiece.value} spaces and pushed in a ${lastMove.capturedColour} Meeple`
+  }
+}
+
+export const play = (squareNumber: SquareNumber, game: Game): LastMove => {
   // Note;  game gets mutated
   const pieceToMove = game.Board[squareNumber]
   switch (pieceToMove.type) {
@@ -122,36 +148,29 @@ export const play = (squareNumber: SquareNumber, game: Game): Info => {
       throw new Error("Move not allowed - the square is empty.");
 
     case "meeple":
-      game.Board[squareNumber] = { type: "empty" }
+      if (pieceToMove === game.LastPieceMoved) {
+        throw new Error("Move not allowed - you cannot move the last piece moved.");
+      }
+      game.LastPieceMoved = pieceToMove;
+      game.Board[squareNumber] = { type: "empty" };
       const newSquareNumber = (squareNumber + pieceToMove.value) % 18
       const captured = game.Board[newSquareNumber]
       game.Board[newSquareNumber] = pieceToMove
 
       if (captured.type === "meeple") {
         game.Counts[captured.colour]--;
-        if (game.Counts[captured.colour] === 0) {
-          if (captured.colour === game.Player) {
-            return {
-              message: `You moved ${pieceToMove.value} spaces and pushed in your final ${captured.colour} Meeple.`
-            }
-          } else if (captured.colour === game.Computer) {
-            return {
-              message: `You moved ${pieceToMove.value} spaces and pushed in the computers final ${captured.colour} Meeple.`
-            }
-          } else {
-            return {
-              message: `You moved ${pieceToMove.value} spaces and pushed in the final ${captured.colour} Meeple.`
-            }
-          }
-        } else {
-          return { message: `You moved ${pieceToMove.value} spaces and pushed in a ${captured.colour} Meeple` }
+        return {
+          movedPiece: pieceToMove,
+          capturedColour: captured.colour
         }
       } else {
-        return { message: `You moved ${pieceToMove.value} spaces into an empty square` }
+        return {
+          movedPiece: pieceToMove
+        }
       }
 
     default:
       unknownPiece(pieceToMove)
+      throw new Error("")
   }
-  return { message: "" }
 }
