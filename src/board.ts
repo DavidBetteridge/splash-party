@@ -127,16 +127,16 @@ export const descriptionOfLastMove = (game: Game, lastMove: LastMove): string =>
   if (game.Counts[lastMove.capturedColour] === 0) {
 
     if (lastMove.capturedColour === game.Player) {
-      return `You moved ${lastMove.movedPiece.value} spaces and pushed in your final ${game.Player} Meeple.`
+      return `You moved ${lastMove.movedPiece.value} spaces and pushed in your final ${MeepleColour[game.Player]} Meeple.`
     }
 
     if (lastMove.capturedColour === game.Computer) {
-      return `You moved ${lastMove.movedPiece.value} spaces and pushed in the computers final ${game.Computer} Meeple.`
+      return `You moved ${lastMove.movedPiece.value} spaces and pushed in the computers final ${MeepleColour[game.Computer]} Meeple.`
     }
 
-    return `You moved ${lastMove.movedPiece.value} spaces and pushed in the final ${lastMove.capturedColour} Meeple.`
+    return `You moved ${lastMove.movedPiece.value} spaces and pushed in the final ${MeepleColour[lastMove.capturedColour]} Meeple.`
   } else {
-    return `You moved ${lastMove.movedPiece.value} spaces and pushed in a ${lastMove.capturedColour} Meeple`
+    return `You moved ${lastMove.movedPiece.value} spaces and pushed in a ${MeepleColour[lastMove.capturedColour]} Meeple`
   }
 }
 
