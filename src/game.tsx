@@ -1,6 +1,7 @@
 import React, { useState, useReducer } from 'react';
 import { styled } from '@mui/material';
 import { newGame, MeepleColour, play, SquareNumber, descriptionOfLastMove } from './board'
+import { flexbox } from '@mui/system';
 
 const CELL_SIZE = "4rem"
 const NOT_A_SQUARE = -1
@@ -17,11 +18,18 @@ const Cell = styled('div')({
   borderStyle: "solid",
   borderColor: 'black',
   width: CELL_SIZE,
-  height: CELL_SIZE
+  height: CELL_SIZE,
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+
+  "&:hover": {
+    backgroundColor: "rgba(255, 0, 0, .5)"
+  }
 });
 
 const EmptyCell = styled('div')({
-  backgroundColor: 'green',
+  backgroundColor: 'yellow',
   border: 1,
   borderStyle: "solid",
   borderColor: 'black',
@@ -37,6 +45,18 @@ const NotACell = styled('div')({
   width: CELL_SIZE,
   height: CELL_SIZE
 });
+
+const Meeple = styled("div", {
+  shouldForwardProp: (prop) => prop !== "color",
+})<{ color?: string }>(({ color }) => ({
+  backgroundColor: color,
+  width: 30,
+  height: 30,
+  border: 1,
+  borderStyle: "solid",
+  borderColor: 'black',
+  borderRadius: 30
+}));
 
 const colours = {
   [MeepleColour.White]: "white",
@@ -72,7 +92,10 @@ function Game() {
   }
 
   function Piece(colour: MeepleColour, squareNumber: SquareNumber) {
-    return (<Cell onClick={() => handleOnClick(squareNumber)}>{colours[colour]}</Cell>);
+    return (
+    <Cell onClick={() => handleOnClick(squareNumber)}>
+      <Meeple color={colours[colour]}></Meeple>
+    </Cell>);
   }
 
   return (
