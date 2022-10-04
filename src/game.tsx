@@ -1,10 +1,11 @@
 import React, { useState, useReducer } from 'react';
 import { styled } from '@mui/material';
-import { newGame, MeepleColour, play, SquareNumber, descriptionOfLastMove } from './board'
-import { flexbox } from '@mui/system';
+import { newGame, MeepleColour, play, SquareNumber, descriptionOfLastMove, LastMove } from './board'
+
 
 const CELL_SIZE = "4rem"
 const NOT_A_SQUARE = -1
+const CAPTURED_SQUARE = -2
 
 const Board = styled('div')({
   backgroundColor: 'aliceblue',
@@ -12,8 +13,10 @@ const Board = styled('div')({
   gridTemplateColumns: `repeat(5, ${CELL_SIZE})`
 })
 
-const Cell = styled('div')({
-  backgroundColor: 'yellow',
+const Cell = styled('div', {
+  shouldForwardProp: (prop) => prop !== "highlight",
+})<{ highlight?: boolean }>(({ highlight }) => ({
+  backgroundColor: highlight ? 'grey' : 'yellow',
   border: 1,
   borderStyle: "solid",
   borderColor: 'black',
@@ -26,7 +29,8 @@ const Cell = styled('div')({
   "&:hover": {
     backgroundColor: "rgba(255, 0, 0, .5)"
   }
-});
+}));
+
 
 const EmptyCell = styled('div')({
   backgroundColor: 'yellow',
@@ -69,6 +73,7 @@ const colours = {
 
 function Game() {
   const [game, setGame] = useState(newGame())
+  const [lastMove, setLastMove] = useState<LastMove | undefined>(undefined)
   const [message, setMessage] = useState("")
   const [_, forceUpdate] = useReducer((x) => x + 1, 0);
 
@@ -76,7 +81,7 @@ function Game() {
     -1, 0, 1, 2, -1,
     17, -1, -1, -1, 3,
     16, -1, -1, -1, 4,
-    15, -1, -1, -1, 5,
+    15, -1, -2, -1, 5,
     14, -1, -1, -1, 6,
     13, -1, -1, -1, 7,
     12, -1, -1, -1, 8,
@@ -88,14 +93,42 @@ function Game() {
     const lastMove = play(squareNumber, game)
     const description = descriptionOfLastMove(game, lastMove)
     setMessage(description)
+    setLastMove(lastMove)
     forceUpdate()
   }
 
   function Piece(colour: MeepleColour, squareNumber: SquareNumber) {
+    const highlight = lastMove && squareNumber === lastMove.squareNumber;
+    if (highlight) {
+      return (
+        <Cell highlight>
+          <Meeple color={colours[colour]}></Meeple>
+        </Cell>);
+    } else {
+      return (
+        <Cell
+          onClick={() => handleOnClick(squareNumber)}>
+          <Meeple color={colours[colour]}></Meeple>
+        </Cell>);
+    }
+  }
+
+  function CapturedCell() {
+    if (lastMove === undefined || lastMove.capturedColour === undefined) {
+      return (<NotACell />);
+    } else {
+      return (
+        <Cell highlight>
+          <Meeple color={colours[lastMove.capturedColour]}></Meeple>
+        </Cell>);
+    }
+  }
+
+  function PlayersCell() {
     return (
-    <Cell onClick={() => handleOnClick(squareNumber)}>
-      <Meeple color={colours[colour]}></Meeple>
-    </Cell>);
+      <Cell>
+        <Meeple color={colours[game.Player]}></Meeple>
+      </Cell>);
   }
 
   return (
@@ -103,11 +136,13 @@ function Game() {
       <div>{message}</div>
       <Board>
         {grid.map(squareNumber => {
-          if (squareNumber == NOT_A_SQUARE) {
+          if (squareNumber === NOT_A_SQUARE) {
             return (<NotACell />)
+          } else if (squareNumber === CAPTURED_SQUARE) {
+            return (<CapturedCell />)
           } else {
             const piece = game.Board[squareNumber];
-            if (piece.type == "meeple") {
+            if (piece.type === "meeple") {
               return (Piece(piece.colour, squareNumber as SquareNumber))
             } else {
               return (<EmptyCell />)
@@ -115,6 +150,9 @@ function Game() {
           }
         })}
       </Board>
+      <div>
+        You are a <PlayersCell />
+      </div>
     </>
   );
 }

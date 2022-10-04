@@ -111,9 +111,10 @@ const generateBoard = (): Board => {
   return shuffle(unshuffled)
 }
 
-type LastMove = {
+export type LastMove = {
   movedPiece: Meeple
   capturedColour?: MeepleColour
+  squareNumber: SquareNumber
 }
 
 const unknownPiece = (a: never): never => { throw new Error(""); }
@@ -153,7 +154,7 @@ export const play = (squareNumber: SquareNumber, game: Game): LastMove => {
       }
       game.LastPieceMoved = pieceToMove;
       game.Board[squareNumber] = { type: "empty" };
-      const newSquareNumber = (squareNumber + pieceToMove.value) % 18
+      const newSquareNumber = (squareNumber + pieceToMove.value) % 18 as SquareNumber
       const captured = game.Board[newSquareNumber]
       game.Board[newSquareNumber] = pieceToMove
 
@@ -161,11 +162,13 @@ export const play = (squareNumber: SquareNumber, game: Game): LastMove => {
         game.Counts[captured.colour]--;
         return {
           movedPiece: pieceToMove,
-          capturedColour: captured.colour
+          capturedColour: captured.colour,
+          squareNumber: newSquareNumber
         }
       } else {
         return {
-          movedPiece: pieceToMove
+          movedPiece: pieceToMove,
+          squareNumber: newSquareNumber
         }
       }
 
