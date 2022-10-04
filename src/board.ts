@@ -47,7 +47,7 @@ type MeepleCount = EnumDictionary<MeepleColour, 0 | 1 | 2 | 3>
 
 
 
-type Game = {
+export type Game = {
   Player: MeepleColour
   Computer: MeepleColour
   Board: Board
@@ -119,7 +119,7 @@ export type LastMove = {
 
 const unknownPiece = (a: never): never => { throw new Error(""); }
 
-export const descriptionOfLastMove = (game: Game, lastMove: LastMove): string => {
+export const descriptionOfPlayersLastMove = (game: Game, lastMove: LastMove): string => {
 
   if (lastMove.capturedColour === undefined) {
     return `You moved ${lastMove.movedPiece.value} spaces into an empty square`
@@ -138,6 +138,28 @@ export const descriptionOfLastMove = (game: Game, lastMove: LastMove): string =>
     return `You moved ${lastMove.movedPiece.value} spaces and pushed in the final ${MeepleColour[lastMove.capturedColour]} Meeple.`
   } else {
     return `You moved ${lastMove.movedPiece.value} spaces and pushed in a ${MeepleColour[lastMove.capturedColour]} Meeple`
+  }
+}
+
+export const descriptionOfComputersLastMove = (game: Game, lastMove: LastMove): string => {
+
+  if (lastMove.capturedColour === undefined) {
+    return `They moved ${lastMove.movedPiece.value} spaces into an empty square`
+  }
+
+  if (game.Counts[lastMove.capturedColour] === 0) {
+
+    if (lastMove.capturedColour === game.Computer) {
+      return `They moved ${lastMove.movedPiece.value} spaces and pushed in their final ${MeepleColour[game.Computer]} Meeple.`
+    }
+
+    if (lastMove.capturedColour === game.Player) {
+      return `They moved ${lastMove.movedPiece.value} spaces and pushed in your final ${MeepleColour[game.Player]} Meeple.`
+    }
+
+    return `They moved ${lastMove.movedPiece.value} spaces and pushed in the final ${MeepleColour[lastMove.capturedColour]} Meeple.`
+  } else {
+    return `They moved ${lastMove.movedPiece.value} spaces and pushed in a ${MeepleColour[lastMove.capturedColour]} Meeple`
   }
 }
 

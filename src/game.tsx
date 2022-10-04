@@ -1,6 +1,7 @@
 import React, { useState, useReducer } from 'react';
 import { styled } from '@mui/material';
-import { newGame, MeepleColour, play, SquareNumber, descriptionOfLastMove, LastMove } from './board'
+import { newGame, MeepleColour, play, SquareNumber, descriptionOfPlayersLastMove, LastMove, descriptionOfComputersLastMove } from './board'
+import { nextMove } from './computer';
 
 
 const CELL_SIZE = "4rem"
@@ -89,12 +90,22 @@ function Game() {
   ]
 
 
-  const handleOnClick = (squareNumber: SquareNumber) => {
-    const lastMove = play(squareNumber, game)
-    const description = descriptionOfLastMove(game, lastMove)
+  const computersTurn = async (movePlayedByPlayer: LastMove) => {
+    const moveToMake = await nextMove(game, movePlayedByPlayer)
+    const movePlayed = play(moveToMake, game)
+    const description = descriptionOfComputersLastMove(game, movePlayed)
     setMessage(description)
-    setLastMove(lastMove)
+    setLastMove(movePlayed)
     forceUpdate()
+  }
+
+  const handleOnClick = (squareNumber: SquareNumber) => {
+    const movePlayed = play(squareNumber, game)
+    const description = descriptionOfPlayersLastMove(game, movePlayed)
+    setMessage(description)
+    setLastMove(movePlayed)
+    forceUpdate()
+    computersTurn(movePlayed)
   }
 
   function Piece(colour: MeepleColour, squareNumber: SquareNumber) {
