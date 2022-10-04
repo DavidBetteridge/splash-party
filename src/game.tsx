@@ -1,7 +1,9 @@
 import React, { useState, useReducer } from 'react';
 import { styled } from '@mui/material';
 import { newGame, MeepleColour, play, SquareNumber, descriptionOfPlayersLastMove, LastMove, descriptionOfComputersLastMove } from './board'
-import { nextMove } from './computer';
+// import { nextMove } from './computer';
+//import { nextMove } from './random_computer';
+import { Computer } from './clever_computer';
 
 
 const CELL_SIZE = "4rem"
@@ -74,6 +76,8 @@ const colours = {
 
 function Game() {
   const [game, setGame] = useState(newGame())
+  const [computer, setComputer] = useState(new Computer())
+
   const [lastMove, setLastMove] = useState<LastMove | undefined>(undefined)
   const [message, setMessage] = useState("")
   const [_, forceUpdate] = useReducer((x) => x + 1, 0);
@@ -91,7 +95,7 @@ function Game() {
 
 
   const computersTurn = async (movePlayedByPlayer: LastMove) => {
-    const moveToMake = await nextMove(game, movePlayedByPlayer)
+    const moveToMake = await computer.nextMove(game, movePlayedByPlayer)
     const movePlayed = play(moveToMake, game)
     const description = descriptionOfComputersLastMove(game, movePlayed)
     setMessage(description)
