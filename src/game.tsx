@@ -97,6 +97,7 @@ function Game() {
   const computersTurn = async (movePlayedByPlayer: LastMove) => {
     const moveToMake = await computer.nextMove(game, movePlayedByPlayer)
     const movePlayed = play(moveToMake, game)
+    computer.observe_move(moveToMake, movePlayed)
     const description = descriptionOfComputersLastMove(game, movePlayed)
     setMessage(description)
     setLastMove(movePlayed)
@@ -105,6 +106,7 @@ function Game() {
 
   const handleOnClick = (squareNumber: SquareNumber) => {
     const movePlayed = play(squareNumber, game)
+    computer.observe_move(squareNumber, movePlayed)
     const description = descriptionOfPlayersLastMove(game, movePlayed)
     setMessage(description)
     setLastMove(movePlayed)
